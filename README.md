@@ -2,10 +2,6 @@
 
 A Socks5 proxy that encapsulates Socks5 in other security protocols
 
-[![build](https://img.shields.io/github/workflow/status/periky/subsocks/Build)](https://github.com/periky/subsocks/actions)
-[![release](https://img.shields.io/github/release/periky/subsocks.svg)](https://github.com/periky/subsocks/releases)
-[![docker](https://img.shields.io/docker/image-size/periky/subsocks)](https://hub.docker.com/r/periky/subsocks)
-
 ## Introduction
 
 Subsocks is a secure Socks5 proxy. It encapsulate Socks5 in other security protocols such as HTTPS and Websocket instead of using Socks5 directly. Socks5 is fully supported (Connect, Bind, UDP associate), and extending Socks5 to make UDP over TCP possible. It helps you optimize your network or bypass firewalls that only allow some particular protocols.

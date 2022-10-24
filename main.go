@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pelletier/go-toml"
+	"github.com/periky/subsocks/config"
 )
 
 func main() {
 	var configPath string
 	var showVersion bool
-	flag.StringVar(&configPath, "c", "", "configuration file, default to 'config.toml'")
+	flag.StringVar(&configPath, "c", "./config.toml", "configuration file, default to 'config.toml'")
 	flag.BoolVar(&showVersion, "v", false, "show version information")
 	flag.Parse()
 
@@ -20,21 +20,14 @@ func main() {
 		return
 	}
 
-	if configPath == "" {
-		configPath = "config.toml"
-		log.Printf("Using default configuration 'config.toml'")
+	config := config.MustParse(configPath)
+	log.Printf("Load configuration complete: %s", configPath)
+
+	if config.Client != nil {
+		launchClient(config)
 	}
 
-	config, err := toml.LoadFile(configPath)
-	if err != nil {
-		log.Fatalf("Load configuration failed: %s", err)
-	}
-
-	if c, ok := config.Get("client").(*toml.Tree); ok {
-		launchClient(c)
-	} else if s, ok := config.Get("server").(*toml.Tree); ok {
-		launchServer(s)
-	} else {
-		log.Fatalf("No valid configuration '[client]' or '[server]'")
+	if config.Server != nil {
+		launchServer(config)
 	}
 }

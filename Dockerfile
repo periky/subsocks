@@ -6,10 +6,9 @@ COPY . .
 
 ENV GO111MODULE=on GOPROXY=https://goproxy.cn,direct
 RUN go build -ldflags "-X main.Version=${VERSION}"
-
 FROM alpine:latest
 
 WORKDIR /subsocks
-COPY --from=builder /subsocks/subsocks .
+COPY subsocks /subsocks/subsocks .
 
 ENTRYPOINT ["/subsocks/subsocks"]
