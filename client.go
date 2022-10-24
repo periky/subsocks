@@ -10,75 +10,20 @@ import (
 	"time"
 
 	"github.com/periky/subsocks/client"
-	"github.com/periky/subsocks/utils"
-	"github.com/pelletier/go-toml"
+	"github.com/periky/subsocks/config"
 )
 
-func launchClient(t *toml.Tree) {
-	config := struct {
-		Listen   string `toml:"listen" default:"127.0.0.1:1080"`
-		Username string `toml:"username"`
-		Password string `toml:"password"`
-		Server   struct {
-			Protocol string `toml:"protocol"`
-			Addr     string `toml:"address"`
-		} `toml:"server"`
-		HTTP struct {
-			Path string `toml:"path" default:"/"`
-		} `toml:"http"`
-		WS struct {
-			Path string `toml:"path" default:"/"`
-		} `toml:"ws"`
-		TLS struct {
-			SkipVerify bool   `toml:"skip_verify"`
-			CA         string `toml:"ca"`
-		} `toml:"tls"`
-	}{}
+func launchClient(cfg *config.Config) {
+	cli := client.NewClient(cfg.Client.Listen)
+	cli.Config.Username = cfg.Client.UserName
+	cli.Config.Password = cfg.Client.Password
+	cli.Config.ServerProtocol = cfg.Client.Protocol
+	cli.Config.ServerAddr = cfg.Client.Addr
+	cli.Config.HTTPPath = cfg.Http.Path
+	cli.Config.WSPath = cfg.Ws.Path
 
-	if err := t.Unmarshal(&config); err != nil {
-		log.Fatalf("Parse '[client]' configuration failed: %s", err)
-	}
-
-	cli := client.NewClient(config.Listen)
-	cli.Config.Username = config.Username
-	cli.Config.Password = config.Password
-	cli.Config.ServerProtocol = config.Server.Protocol
-	cli.Config.ServerAddr = config.Server.Addr
-	cli.Config.HTTPPath = config.HTTP.Path
-	cli.Config.WSPath = config.WS.Path
-
-	switch users := t.Get("users").(type) {
-	case string:
-		cli.Config.Verify = utils.VerifyByHtpasswd(users)
-	case *toml.Tree:
-		m := make(map[string]string)
-		if err := users.Unmarshal(&m); err != nil {
-			log.Fatalf("Parse 'server.users' configuration failed: %s", err)
-		}
-		cli.Config.Verify = utils.VerifyByMap(m)
-	}
-
-	switch rules := t.Get("rules").(type) {
-	case string:
-		r, err := client.NewRulesFromFile(rules)
-		if err != nil {
-			log.Fatalf("Load rule file failed: %s", err)
-		}
-		cli.Rules = r
-	case *toml.Tree:
-		m := make(map[string]string)
-		if err := rules.Unmarshal(&m); err != nil {
-			log.Fatalf("Parse 'client.rules' configuration failed: %s", err)
-		}
-		r, err := client.NewRulesFromMap(m)
-		if err != nil {
-			log.Fatalf("Load rules file failed: %s", err)
-		}
-		cli.Rules = r
-	}
-
-	if needsTLS[config.Server.Protocol] {
-		tlsConfig, err := getClientTLSConfig(config.Server.Addr, config.TLS.CA, config.TLS.SkipVerify)
+	if needsTLS[cfg.Client.Protocol] {
+		tlsConfig, err := getClientTLSConfig(cfg.Client.Addr, cfg.Tls.CaFile, cfg.Tls.CertFile, cfg.Tls.KeyFile)
 		if err != nil {
 			log.Fatalf("Get TLS configuration failed: %s", err)
 		}
@@ -90,8 +35,12 @@ func launchClient(t *toml.Tree) {
 	}
 }
 
-func getClientTLSConfig(addr, ca string, skipVerify bool) (config *tls.Config, err error) {
-	rootCAs, err := loadCA(ca)
+func getClientTLSConfig(addr, caFile, certFile, keyFile string) (config *tls.Config, err error) {
+	rootCAs, err := loadCA(caFile)
+	if err != nil {
+		return
+	}
+	cliCrt, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return
 	}
@@ -99,11 +48,8 @@ func getClientTLSConfig(addr, ca string, skipVerify bool) (config *tls.Config, e
 	if net.ParseIP(serverName) != nil { // server name is IP
 		config = &tls.Config{
 			InsecureSkipVerify: true,
+			Certificates:       []tls.Certificate{cliCrt},
 			VerifyConnection: func(cs tls.ConnectionState) error { // verify manually
-				if skipVerify {
-					return nil
-				}
-
 				opts := x509.VerifyOptions{
 					Roots:         rootCAs,
 					CurrentTime:   time.Now(),
@@ -124,9 +70,9 @@ func getClientTLSConfig(addr, ca string, skipVerify bool) (config *tls.Config, e
 		}
 	} else { // server name is domain
 		config = &tls.Config{
-			ServerName:         serverName,
-			RootCAs:            rootCAs,
-			InsecureSkipVerify: skipVerify,
+			ServerName:   serverName,
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cliCrt},
 		}
 	}
 

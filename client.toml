@@ -1,0 +1,13 @@
+[client]
+listen = "127.0.0.1:1080"
+protocol = "https"
+# address = "101.32.243.19:10800"
+address = "127.0.0.1:10800"
+
+[http]
+path = "/proxy"
+
+[tls]
+ca = "/home/wangpu/Code/subsocks/certs/ca.crt"
+cert = "/home/wangpu/Code/subsocks/certs/client.crt"
+key = "/home/wangpu/Code/subsocks/certs/client.key"

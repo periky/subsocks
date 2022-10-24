@@ -1,0 +1,11 @@
+[server]
+listen = "0.0.0.0:10800"
+protocol = "https"
+
+[http]
+path = "/proxy"
+
+[tls]
+ca = "/home/wangpu/Code/subsocks/certs/ca.crt"
+cert = "/home/wangpu/Code/subsocks/certs/server.crt"
+key = "/home/wangpu/Code/subsocks/certs/server.key"
