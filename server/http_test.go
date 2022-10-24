@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/utils"
 )
 
 func TestHTTPStripper(t *testing.T) {

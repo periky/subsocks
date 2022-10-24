@@ -12,7 +12,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/utils"
 )
 
 // Version = 5

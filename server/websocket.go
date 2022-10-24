@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/websocket"
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/utils"
 )
 
 func (s *Server) wssHandler(conn net.Conn) {

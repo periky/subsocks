@@ -8,7 +8,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/luyuhuang/subsocks/socks"
+	"github.com/periky/subsocks/socks"
 )
 
 // Client holds contexts of the client

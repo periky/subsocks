@@ -7,8 +7,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/luyuhuang/subsocks/socks"
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/socks"
+	"github.com/periky/subsocks/utils"
 )
 
 func (c *Client) wrapSocks(conn net.Conn) net.Conn {

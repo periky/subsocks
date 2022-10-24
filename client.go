@@ -9,8 +9,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/luyuhuang/subsocks/client"
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/client"
+	"github.com/periky/subsocks/utils"
 	"github.com/pelletier/go-toml"
 )
 

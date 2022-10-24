@@ -11,8 +11,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/luyuhuang/subsocks/server"
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/server"
+	"github.com/periky/subsocks/utils"
 	"github.com/pelletier/go-toml"
 )
 

@@ -10,7 +10,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/utils"
 )
 
 func (s *Server) httpsHandler(conn net.Conn) {

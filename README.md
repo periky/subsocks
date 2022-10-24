@@ -2,9 +2,9 @@
 
 A Socks5 proxy that encapsulates Socks5 in other security protocols
 
-[![build](https://img.shields.io/github/workflow/status/luyuhuang/subsocks/Build)](https://github.com/luyuhuang/subsocks/actions)
-[![release](https://img.shields.io/github/release/luyuhuang/subsocks.svg)](https://github.com/luyuhuang/subsocks/releases)
-[![docker](https://img.shields.io/docker/image-size/luyuhuang/subsocks)](https://hub.docker.com/r/luyuhuang/subsocks)
+[![build](https://img.shields.io/github/workflow/status/periky/subsocks/Build)](https://github.com/periky/subsocks/actions)
+[![release](https://img.shields.io/github/release/periky/subsocks.svg)](https://github.com/periky/subsocks/releases)
+[![docker](https://img.shields.io/docker/image-size/periky/subsocks)](https://hub.docker.com/r/periky/subsocks)
 
 ## Introduction
 
@@ -26,25 +26,21 @@ Subsocks is a secure Socks5 proxy. It encapsulate Socks5 in other security proto
 Subsocks is written by Go, If you have Go environment, using `go get` is one of the easiest ways.
 
 ```sh
-go get github.com/luyuhuang/subsocks
+go get github.com/periky/subsocks
 ```
 
 ### Docker
 
 ```sh
-docker pull luyuhuang/subsocks
+docker pull periky/subsocks
 ```
-
-### Binary file
-
-Download the binary file from the [release page](https://github.com/luyuhuang/subsocks/releases).
 
 ### Build from source code
 
 You can also build from source code.
 
 ```sh
-git clone https://github.com/luyuhuang/subsocks.git
+git clone https://github.com/periky/subsocks.git
 cd subsocks
 go build
 ```
@@ -92,38 +88,9 @@ And then start the server:
 subsocks -c ser.toml
 ```
 
-### With Docker
-
-Download `docker-compose.yml`:
-
-```
-wget https://raw.githubusercontent.com/luyuhuang/subsocks/master/docker-compose.yml
-```
-
-Create the configuration file `config.toml`:
-
-```toml
-[server] # no one will use docker for the client, right?
-
-# must be "0.0.0.0:1080". It's just the address in the
-# container, modify the real address in docker-compose.yml
-listen = "0.0.0.0:1080"
-
-protocol = "https"
-# other fields ...
-```
-
-Launch:
-
-```sh
-docker-compose up -d
-```
-
-> NOTICE: If you want to use a custom certificate, edit `docker-compose.yml` and create a volume to map it to the container.
-
 ## Configuration
 
-Subsocks configuration format is [TOML](https://github.com/toml-lang/toml), which is easy and obvious.
+Subsocks configuration format is [TOML](https://github.com/BurntSushi/toml), which is easy and obvious.
 
 ### Client configuration
 
@@ -176,55 +143,6 @@ If the protocol is over TLS, i.e. `server.protocol` is `https` or `wss`, `tls.*`
 
 - `tls.skip_verify`: boolean, skip verifying the server's certificate if the value is true. Default false. It's not safe to skip verifying the certificate, if the server's certificate is self-signed, please set `tls.ca` to verify the certificate.
 - `tls.ca`: string, a certificate file name. It's optional. If set, Subsocks will use the specific CA certificate to verify the server's certificate.
-
-#### Smart Proxy
-
-If there is a `rules` field, enable smart proxy. Smart proxy is only available for the Connect method since we don't know the real peer when using Bind or UDP Associate. There are two ways to configure proxy rules. One is setting the `rules` field to a table containing proxy rules:
-
-```toml
-[client.rules]
-"www.twitter.com" = "P"
-"*.github.com" = "D"
-"8.8.8.8" = "P"
-"1.0.1.0/24" = "D"
-"2001:db8::/32" = "P"
-
-"*" = "A"
-```
-
-Each pair in the table is a rule. The left side of `=` is the address, which can be:
-
-- Domain, a wildcard `*` indicates all subdomains of the domain;
-- IP and CIDR;
-- A single wildcard `*` represents all other addresses.
-
-The right side of `=` is the rule, which can be:
-
-- `P`, `proxy`: always via the server;
-- `D`, `direct`: always direct connect;
-- `A`, `auto`: automatic detection, proxy if the direct connection fails.
-
-Another way is using a separate file to configure rules and set the `rules` field to a string representing the file name:
-
-```toml
-rules = "rules.txt"
-```
-
-The contents of `rules.txt` are as follows:
-
-```
-www.twitter.com     P
-8.8.8.8
-2001:db8::/32
-
-*.github.com        D
-1.0.1.0/24
-
-# all others is automatic detection
-*   A
-```
-
-Each line is a rule, except empty lines and comment lines(starting with `#`). Each line contains an address and an optional rule, separated by several spaces. If a line doesn't have a rule, its rule is the same as the previous line.
 
 #### Authorization
 

@@ -11,8 +11,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/luyuhuang/subsocks/socks"
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/socks"
+	"github.com/periky/subsocks/utils"
 )
 
 func (c *Client) wrapHTTPS(conn net.Conn) net.Conn {

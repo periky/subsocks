@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	"github.com/luyuhuang/subsocks/utils"
+	"github.com/periky/subsocks/utils"
 )
 
 func wsUpgrade(w io.Writer, path, auth string) {
