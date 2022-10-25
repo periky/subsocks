@@ -48,7 +48,6 @@ func getClientTLSConfig(addr, caFile, certFile, keyFile string) (config *tls.Con
 	if net.ParseIP(serverName) != nil { // server name is IP
 		config = &tls.Config{
 			InsecureSkipVerify: true,
-			Certificates:       []tls.Certificate{cliCrt},
 			VerifyConnection: func(cs tls.ConnectionState) error { // verify manually
 				opts := x509.VerifyOptions{
 					Roots:         rootCAs,
