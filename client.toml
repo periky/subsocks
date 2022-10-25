@@ -1,0 +1,12 @@
+[client]
+listen = "0.0.0.0:1080"
+protocol = "https"
+address = "127.0.0.1:10800"
+
+[http]
+path = "/proxy"
+
+[tls]
+ca = "/home/wangpu/certs/root.crt"
+cert = "/home/wangpu/certs/client.crt"
+key = "/home/wangpu/certs/client.key"

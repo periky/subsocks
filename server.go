@@ -40,8 +40,10 @@ func getServerTLSConfig(caFile, certFile, keyFile string) (config *tls.Config, e
 
 	config = &tls.Config{
 		RootCAs:            rootCAs,
+		ClientCAs:          rootCAs,
 		Certificates:       []tls.Certificate{cliCrt},
 		InsecureSkipVerify: false,
+		ClientAuth:         tls.RequireAndVerifyClientCert,
 	}
 
 	return

@@ -6,6 +6,6 @@ protocol = "https"
 path = "/proxy"
 
 [tls]
-ca = "/home/wangpu/Code/subsocks/certs/ca.crt"
-cert = "/home/wangpu/Code/subsocks/certs/server.crt"
-key = "/home/wangpu/Code/subsocks/certs/server.key"
+ca = "/home/wangpu/certs/root.crt"
+cert = "/home/wangpu/certs/server.crt"
+key = "/home/wangpu/certs/server.key"

@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
 
 	"github.com/periky/subsocks/client"
 	"github.com/periky/subsocks/config"
@@ -47,25 +46,28 @@ func getClientTLSConfig(addr, caFile, certFile, keyFile string) (config *tls.Con
 	serverName, _, _ := net.SplitHostPort(addr)
 	if net.ParseIP(serverName) != nil { // server name is IP
 		config = &tls.Config{
-			InsecureSkipVerify: true,
-			VerifyConnection: func(cs tls.ConnectionState) error { // verify manually
-				opts := x509.VerifyOptions{
-					Roots:         rootCAs,
-					CurrentTime:   time.Now(),
-					Intermediates: x509.NewCertPool(),
-				}
+			// InsecureSkipVerify: true,
+			// VerifyConnection: func(cs tls.ConnectionState) error { // verify manually
+			// 	opts := x509.VerifyOptions{
+			// 		Roots:         rootCAs,
+			// 		CurrentTime:   time.Now(),
+			// 		Intermediates: x509.NewCertPool(),
+			// 	}
 
-				certs := cs.PeerCertificates
-				for i, cert := range certs {
-					if i == 0 {
-						continue
-					}
-					opts.Intermediates.AddCert(cert)
-				}
+			// 	certs := cs.PeerCertificates
+			// 	for i, cert := range certs {
+			// 		if i == 0 {
+			// 			continue
+			// 		}
+			// 		opts.Intermediates.AddCert(cert)
+			// 	}
 
-				_, err := certs[0].Verify(opts)
-				return err
-			},
+			// 	_, err := certs[0].Verify(opts)
+			// 	return err
+			// },
+			ServerName:   serverName,
+			RootCAs:      rootCAs,
+			Certificates: []tls.Certificate{cliCrt},
 		}
 	} else { // server name is domain
 		config = &tls.Config{
