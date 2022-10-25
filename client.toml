@@ -7,6 +7,6 @@ address = "127.0.0.1:10800"
 path = "/proxy"
 
 [tls]
-ca = "/home/wangpu/certs/root.crt"
-cert = "/home/wangpu/certs/client.crt"
-key = "/home/wangpu/certs/client.key"
+ca = "/home/wangpu/Code/subsocks/certs/root.crt"
+cert = "/home/wangpu/Code/subsocks/certs/client.crt"
+key = "/home/wangpu/Code/subsocks/certs/client.key"
