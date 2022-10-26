@@ -88,7 +88,13 @@ func (w *wsWrapper) handshake() (conn *websocket.Conn, err error) {
 		s := base64.StdEncoding.EncodeToString([]byte(config.Username + ":" + config.Password))
 		header.Add("Authorization", "Basic "+s)
 	}
-	conn, res, err := websocket.NewClient(w.Conn, &u, header, 0, 0)
+
+	wsDial := websocket.Dialer{
+		NetDial: func(net, addr string) (net.Conn, error) {
+			return w.Conn, nil
+		},
+	}
+	conn, res, err := wsDial.Dial(u.String(), header)
 	if err == nil {
 		log.Printf("[websocket] connection established: %s", res.Status)
 	}

@@ -76,7 +76,7 @@ func (c *Client) httpHandler(conn net.Conn) {
 
 	var nextHop net.Conn
 	var isProxy bool
-	if rule := c.Rules.getRule(host); rule == ruleProxy {
+	if utils.StrInSlice(host, c.Proxys) {
 		log.Printf(`[http] dial server to connect %s for %s`, addr, conn.RemoteAddr())
 
 		isProxy = true
@@ -90,22 +90,15 @@ func (c *Client) httpHandler(conn net.Conn) {
 	} else {
 		log.Printf(`[http] dial %s for %s`, addr, conn.RemoteAddr())
 
+		// gfw列表中不存在,直连
 		nextHop, err = net.Dial("tcp", addr)
+		// 直连失败,尝试代理连接
 		if err != nil {
-			if rule == ruleAuto {
-				log.Printf(`[http] dial %s failed, dial server for %s`, addr, conn.RemoteAddr())
-
-				isProxy = true
-				nextHop, err = c.dialServer()
-				if err != nil {
-					log.Printf(`[http] dial server failed: %s`, err)
-					httpReply(http.StatusServiceUnavailable, "").Write(conn)
-					return
-				}
-				c.Rules.setAsProxy(host)
-
-			} else {
-				log.Printf(`[http] dial remote failed: %s`, err)
+			log.Printf(`[http] dial %s failed, dial server for %s`, addr, conn.RemoteAddr())
+			isProxy = true
+			nextHop, err = c.dialServer()
+			if err != nil {
+				log.Printf(`[http] dial server failed: %s`, err)
 				httpReply(http.StatusServiceUnavailable, "").Write(conn)
 				return
 			}
@@ -196,11 +189,11 @@ func (h *httpWrapper) Read(b []byte) (n int, err error) {
 		}
 		if res.StatusCode != 200 {
 			res.Body.Close()
-			return 0, fmt.Errorf("Response status is not OK: %s", res.Status)
+			return 0, fmt.Errorf("response status is not OK: %s", res.Status)
 		}
 		if !utils.StrInSlice("chunked", res.TransferEncoding) {
 			res.Body.Close()
-			return 0, fmt.Errorf("Response is not chunked")
+			return 0, fmt.Errorf("response is not chunked")
 		}
 		h.body = res.Body
 	}

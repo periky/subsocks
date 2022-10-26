@@ -15,11 +15,12 @@ type Config struct {
 }
 
 type Client struct {
-	Listen   string `toml:"listen"`
-	Protocol string `toml:"protocol"`
-	UserName string `toml:"username"`
-	Password string `toml:"password"`
-	Addr     string `toml:"address"`
+	Listen   string   `toml:"listen"`
+	Protocol string   `toml:"protocol"`
+	UserName string   `toml:"username"`
+	Password string   `toml:"password"`
+	Addr     string   `toml:"address"`
+	Proxy    []string `toml:"proxy"`
 }
 
 type Server struct {

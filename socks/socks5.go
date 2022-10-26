@@ -79,7 +79,7 @@ Method selection
 func ReadMethods(r io.Reader) ([]uint8, error) {
 	//b := make([]byte, 257)
 	b := utils.SPool.Get().([]byte)
-	defer utils.SPool.Put(b)
+	defer utils.SPool.Put(&b)
 
 	n, err := io.ReadAtLeast(r, b, 2)
 	if err != nil {

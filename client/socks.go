@@ -107,9 +107,8 @@ func (c *Client) handleConnect(conn net.Conn, req *socks.Request) {
 	var err error
 	var isProxy bool
 
-	if rule := c.Rules.getRule(req.Addr.Host); rule == ruleProxy {
+	if utils.StrInSlice(req.Addr.Host, c.Proxys) {
 		log.Printf(`[socks5] "connect" dial server to connect %s for %s`, req.Addr, conn.RemoteAddr())
-
 		isProxy = true
 		nextHop, err = c.dialServer()
 		if err != nil {
@@ -122,25 +121,16 @@ func (c *Client) handleConnect(conn net.Conn, req *socks.Request) {
 		defer nextHop.Close()
 
 	} else {
+		// gfw列表中不存在,直连
 		log.Printf(`[socks5] "connect" dial %s for %s`, req.Addr, conn.RemoteAddr())
-
 		nextHop, err = net.Dial("tcp", req.Addr.String())
+		// 直连失败,尝试代理连接
 		if err != nil {
-			if rule == ruleAuto {
-				log.Printf(`[socks5] "connect" dial %s failed, dial server for %s`, req.Addr, conn.RemoteAddr())
-
-				isProxy = true
-				nextHop, err = c.dialServer()
-				if err != nil {
-					log.Printf(`[socks5] "connect" dial server failed: %s`, err)
-					if err = socks.NewReply(socks.HostUnreachable, nil).Write(conn); err != nil {
-						log.Printf(`[socks5] "connect" write reply failed: %s`, err)
-					}
-					return
-				}
-				c.Rules.setAsProxy(req.Addr.Host)
-			} else {
-				log.Printf(`[socks5] "connect" dial remote failed: %s`, err)
+			log.Printf(`[socks5] "connect" dial %s failed, dial server for %s`, req.Addr, conn.RemoteAddr())
+			isProxy = true
+			nextHop, err = c.dialServer()
+			if err != nil {
+				log.Printf(`[socks5] "connect" dial server failed: %s`, err)
 				if err = socks.NewReply(socks.HostUnreachable, nil).Write(conn); err != nil {
 					log.Printf(`[socks5] "connect" write reply failed: %s`, err)
 				}
@@ -248,7 +238,7 @@ func (c *Client) requestServer4UDP() (net.Conn, error) {
 	}
 	if res.Rep != socks.Succeeded {
 		ser.Close()
-		return nil, fmt.Errorf("Request UDP over TCP associate failed: %q", res.Rep)
+		return nil, fmt.Errorf("request UDP over TCP associate failed: %q", res.Rep)
 	}
 	return ser, nil
 }
@@ -259,7 +249,7 @@ func tunnelUDP(udp net.PacketConn, conn net.Conn) error {
 
 	go func() {
 		b := utils.LPool.Get().([]byte)
-		defer utils.LPool.Put(b)
+		defer utils.LPool.Put(&b)
 
 		for {
 			n, addr, err := udp.ReadFrom(b)
@@ -310,7 +300,7 @@ func tunnelUDP(udp net.PacketConn, conn net.Conn) error {
 
 func waiting4EOF(conn net.Conn) (err error) {
 	b := utils.SPool.Get().([]byte)
-	defer utils.SPool.Put(b)
+	defer utils.SPool.Put(&b)
 	for {
 		_, err = conn.Read(b)
 		if err != nil {

@@ -7,15 +7,17 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 
 	"github.com/periky/subsocks/socks"
+	"github.com/periky/subsocks/utils"
 )
 
 // Client holds contexts of the client
 type Client struct {
 	Config    *Config
 	TLSConfig *tls.Config
-	Rules     *Rules
+	Proxys    []string
 }
 
 // NewClient creates a client
@@ -95,7 +97,7 @@ var protocol2wrapper = map[string]func(*Client, net.Conn) net.Conn{
 func (c *Client) dialServer() (net.Conn, error) {
 	wrapper, ok := protocol2wrapper[c.Config.ServerProtocol]
 	if !ok {
-		return nil, errors.New("Unknow protocol")
+		return nil, errors.New("unknow protocol")
 	}
 
 	conn, err := net.Dial("tcp", c.Config.ServerAddr)
@@ -116,10 +118,23 @@ func (c *Client) dialServer() (net.Conn, error) {
 	}
 	if buf[0] != socks.Version || buf[1] != socks.MethodNoAuth {
 		conn.Close()
-		return nil, errors.New("Handshake failed")
+		return nil, errors.New("handshake failed")
 	}
 
 	return conn, nil
+}
+
+func (c *Client) AutoUpdateGFWList() {
+	ticker := time.NewTicker(4 * time.Hour)
+	defer ticker.Stop()
+	for t := range ticker.C {
+		log.Println("[client] auto update gfwlist ", t)
+		urlProxy, err := utils.FetchGFWlist(c.Config.Addr)
+		if err != nil {
+			log.Println("[client] get gfwlist failed: ", err)
+		}
+		c.Proxys = urlProxy
+	}
 }
 
 // Config is the client configuration
