@@ -39,6 +39,15 @@ func (c *Client) Serve() error {
 	if err != nil {
 		return err
 	}
+
+	// 生成pac规则列表
+	urlProxy, err := utils.FetchGFWlist(c.Config.Addr)
+	if err != nil {
+		log.Printf("gen pac from gfwlist: %s", err)
+	}
+	c.Proxys = append(c.Proxys, urlProxy...)
+	go c.AutoUpdateGFWList()
+
 	log.Printf("Client starts to listen socks5://%s", listener.Addr().String())
 	log.Printf("Client starts to listen http://%s", listener.Addr().String())
 

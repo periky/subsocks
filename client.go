@@ -10,7 +10,6 @@ import (
 
 	"github.com/periky/subsocks/client"
 	"github.com/periky/subsocks/config"
-	"github.com/periky/subsocks/utils"
 )
 
 func launchClient(cfg *config.Config) {
@@ -21,6 +20,7 @@ func launchClient(cfg *config.Config) {
 	cli.Config.ServerAddr = cfg.Client.Addr
 	cli.Config.HTTPPath = cfg.Http.Path
 	cli.Config.WSPath = cfg.Ws.Path
+	cli.Proxys = cfg.Client.Proxy
 
 	if needsTLS[cfg.Client.Protocol] {
 		tlsConfig, err := getClientTLSConfig(cfg.Client.Addr, cfg.Tls.CaFile, cfg.Tls.CertFile, cfg.Tls.KeyFile)
@@ -29,12 +29,6 @@ func launchClient(cfg *config.Config) {
 		}
 		cli.TLSConfig = tlsConfig
 	}
-	urlProxy, err := utils.FetchGFWlist(cfg.Client.Listen)
-	if err != nil {
-		log.Fatalf("gen pac from gfwlist: %s", err)
-	}
-	cli.Proxys = append(cfg.Client.Proxy, urlProxy...)
-	go cli.AutoUpdateGFWList()
 
 	if err := cli.Serve(); err != nil {
 		log.Fatalf("Launch client failed: %s", err)
