@@ -20,7 +20,7 @@ func launchClient(cfg *config.Config) {
 	cli.Config.ServerAddr = cfg.Client.Addr
 	cli.Config.HTTPPath = cfg.Http.Path
 	cli.Config.WSPath = cfg.Ws.Path
-	cli.Proxys = cfg.Client.Proxy
+	cli.Proxys = append(cli.Proxys, cfg.Client.Proxy...)
 
 	if needsTLS[cfg.Client.Protocol] {
 		tlsConfig, err := getClientTLSConfig(cfg.Client.Addr, cfg.Tls.CaFile, cfg.Tls.CertFile, cfg.Tls.KeyFile)

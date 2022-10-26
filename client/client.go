@@ -26,6 +26,7 @@ func NewClient(addr string) *Client {
 		Config: &Config{
 			Addr: addr,
 		},
+		Proxys: []string{"raw.githubusercontent.com"},
 	}
 }
 
@@ -40,12 +41,6 @@ func (c *Client) Serve() error {
 		return err
 	}
 
-	// 生成pac规则列表
-	urlProxy, err := utils.FetchGFWlist(c.Config.Addr)
-	if err != nil {
-		log.Printf("gen pac from gfwlist: %s", err)
-	}
-	c.Proxys = append(c.Proxys, urlProxy...)
 	go c.AutoUpdateGFWList()
 
 	log.Printf("Client starts to listen socks5://%s", listener.Addr().String())
@@ -134,6 +129,13 @@ func (c *Client) dialServer() (net.Conn, error) {
 }
 
 func (c *Client) AutoUpdateGFWList() {
+	// 生成pac规则列表
+	urlProxy, err := utils.FetchGFWlist(c.Config.Addr)
+	if err != nil {
+		log.Printf("gen pac from gfwlist: %s", err)
+	}
+	c.Proxys = append(c.Proxys, urlProxy...)
+
 	ticker := time.NewTicker(4 * time.Hour)
 	defer ticker.Stop()
 	for t := range ticker.C {

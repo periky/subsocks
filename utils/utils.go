@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/subtle"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"strings"
@@ -58,7 +59,7 @@ func StrEQ(s1, s2 string) bool {
 // StrInSlice return whether str in slice
 func StrInSlice(str string, slice []string) bool {
 	for _, s := range slice {
-		if s == str {
+		if s == str || strings.HasSuffix(str, fmt.Sprintf(".%s", s)) {
 			return true
 		}
 	}

@@ -19,7 +19,7 @@ func FetchGFWlist(proxyUrl string) ([]string, error) {
 		Transport: &http.Transport{
 			Proxy: http.ProxyURL(uri),
 		},
-		Timeout: 10 * time.Second,
+		Timeout: 20 * time.Second,
 	}
 	resp, err := client.Get(gfwUrl)
 	if err != nil {
