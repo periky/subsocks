@@ -36,10 +36,6 @@ func launchClient(cfg *config.Config) {
 }
 
 func getClientTLSConfig(addr, caFile, certFile, keyFile string) (config *tls.Config, err error) {
-	rootCAs, err := loadCA(caFile)
-	if err != nil {
-		return
-	}
 	cliCrt, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return
@@ -47,24 +43,27 @@ func getClientTLSConfig(addr, caFile, certFile, keyFile string) (config *tls.Con
 	serverName, _, _ := net.SplitHostPort(addr)
 	config = &tls.Config{
 		ServerName:   serverName,
-		RootCAs:      rootCAs,
+		RootCAs:      x509.NewCertPool(),
 		Certificates: []tls.Certificate{cliCrt},
+	}
+	err = loadCA(caFile, config)
+	if err != nil {
+		return
 	}
 
 	return
 }
 
-func loadCA(caFile string) (cp *x509.CertPool, err error) {
+func loadCA(caFile string, config *tls.Config) error {
 	if caFile == "" {
-		return
+		return errors.New("cafile not provide")
 	}
-	cp = x509.NewCertPool()
 	data, err := ioutil.ReadFile(caFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if !cp.AppendCertsFromPEM(data) {
-		return nil, errors.New("AppendCertsFromPEM failed")
+	if !config.RootCAs.AppendCertsFromPEM(data) {
+		return errors.New("append certs from pem failed")
 	}
-	return
+	return nil
 }

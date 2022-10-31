@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/periky/subsocks/config"
+	"github.com/periky/subsocks/utils"
 )
 
 func main() {
@@ -22,6 +23,9 @@ func main() {
 
 	config := config.MustParse(configPath)
 	log.Printf("Load configuration complete: %s", configPath)
+
+	// pprof
+	utils.PProf()
 
 	if config.Client != nil {
 		launchClient(config)

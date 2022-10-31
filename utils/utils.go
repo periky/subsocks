@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"strings"
 	"sync"
 
 	"github.com/tg123/go-htpasswd"
+	"golang.org/x/sync/errgroup"
 )
 
 // buffer pools
@@ -27,28 +31,50 @@ var (
 )
 
 // Transport rw1 and rw2
-func Transport(rw1, rw2 io.ReadWriter) error {
-	errc := make(chan error, 1)
-	go func() {
-		b := LPool.Get().([]byte)
-		defer LPool.Put(b)
+// func Transport(rw1, rw2 io.ReadWriter) error {
+// 	errc := make(chan error, 1)
+// 	go func() {
+// 		b := LPool.Get().([]byte)
+// 		defer LPool.Put(b)
 
-		_, err := io.CopyBuffer(rw1, rw2, b)
-		errc <- err
-	}()
+// 		_, err := io.CopyBuffer(rw1, rw2, b)
+// 		errc <- err
+// 	}()
 
-	go func() {
-		b := LPool.Get().([]byte)
-		defer LPool.Put(b)
+// 	go func() {
+// 		b := LPool.Get().([]byte)
+// 		defer LPool.Put(b)
 
-		_, err := io.CopyBuffer(rw2, rw1, b)
-		errc <- err
-	}()
+// 		_, err := io.CopyBuffer(rw2, rw1, b)
+// 		errc <- err
+// 	}()
 
-	if err := <-errc; err != nil && err != io.EOF {
+// 	if err := <-errc; err != nil && err != io.EOF {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func Transport(client, target net.Conn) error {
+	forward := func(src, dst net.Conn) error {
+		defer src.Close()
+		defer dst.Close()
+		_, err := io.Copy(dst, src)
 		return err
 	}
-	return nil
+
+	g := new(errgroup.Group)
+	g.Go(func() error {
+		err := forward(client, target)
+		return err
+	})
+	g.Go(func() error {
+		err := forward(target, client)
+		return err
+	})
+	err := g.Wait()
+
+	return err
 }
 
 // StrEQ returns whether s1 and s2 are equal
@@ -103,4 +129,10 @@ func HttpBasicAuth(auth string, verify func(string, string) bool) bool {
 		return false
 	}
 	return verify(groups[0], groups[1])
+}
+
+func PProf() {
+	go func() {
+		log.Println(http.ListenAndServe(":8090", nil))
+	}()
 }

@@ -20,7 +20,16 @@ vet: ## Run go vet against code.
 
 .PHONY: build
 build: dependency fmt vet
-	go build -o bin/subsocks
+	make build-linux
+	make build-windows
+
+.PHOHY: build-linux
+build-linux:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/subsocks-linux-amd64
+
+.PHOHY: build-windows
+build-windows:
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/subsocks-win-amd64.exe
 
 .PHONY: docker-build
 docker-build:
