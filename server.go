@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"log"
 
 	"github.com/periky/subsocks/config"
@@ -29,21 +28,22 @@ func launchServer(cfg *config.Config) {
 }
 
 func getServerTLSConfig(caFile, certFile, keyFile string) (config *tls.Config, err error) {
+	rootCAs, err := loadCA(caFile)
+	if err != nil {
+		return
+	}
+
 	cliCrt, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return
 	}
 
 	config = &tls.Config{
-		RootCAs:            x509.NewCertPool(),
-		ClientCAs:          x509.NewCertPool(),
+		RootCAs:            rootCAs,
+		ClientCAs:          rootCAs,
 		Certificates:       []tls.Certificate{cliCrt},
 		InsecureSkipVerify: false,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
-	}
-	err = loadCA(caFile, config)
-	if err != nil {
-		return
 	}
 
 	return
