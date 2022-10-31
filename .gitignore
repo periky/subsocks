@@ -1,6 +1,6 @@
 subsocks
 targets/
 .proxy-cache
-./bin
+./bin/
 .vscode/
 certs/
