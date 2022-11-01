@@ -56,9 +56,10 @@ var (
 // }
 
 func Transport(client, target net.Conn) error {
+	defer client.Close()
+	defer target.Close()
+
 	forward := func(src, dst net.Conn) error {
-		defer src.Close()
-		defer dst.Close()
 		_, err := io.Copy(dst, src)
 		return err
 	}
