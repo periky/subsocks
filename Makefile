@@ -20,8 +20,7 @@ vet: ## Run go vet against code.
 
 .PHONY: build
 build: dependency fmt vet
-	make build-linux
-	make build-windows
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/subsocks
 
 .PHOHY: build-linux
 build-linux:

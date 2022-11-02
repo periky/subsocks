@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"strings"
@@ -31,50 +30,26 @@ var (
 )
 
 // Transport rw1 and rw2
-// func Transport(rw1, rw2 io.ReadWriter) error {
-// 	errc := make(chan error, 1)
-// 	go func() {
-// 		b := LPool.Get().([]byte)
-// 		defer LPool.Put(b)
-
-// 		_, err := io.CopyBuffer(rw1, rw2, b)
-// 		errc <- err
-// 	}()
-
-// 	go func() {
-// 		b := LPool.Get().([]byte)
-// 		defer LPool.Put(b)
-
-// 		_, err := io.CopyBuffer(rw2, rw1, b)
-// 		errc <- err
-// 	}()
-
-// 	if err := <-errc; err != nil && err != io.EOF {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-func Transport(client, target net.Conn) error {
-	defer client.Close()
-	defer target.Close()
-
-	forward := func(src, dst net.Conn) error {
-		_, err := io.Copy(dst, src)
-		return err
-	}
-
+func Transport(rw1, rw2 io.ReadWriter) error {
 	g := new(errgroup.Group)
-	g.Go(func() error {
-		err := forward(client, target)
-		return err
-	})
-	g.Go(func() error {
-		err := forward(target, client)
-		return err
-	})
-	err := g.Wait()
 
+	g.Go(func() error {
+		b := LPool.Get().([]byte)
+		defer LPool.Put(b)
+
+		_, err := io.CopyBuffer(rw1, rw2, b)
+		return err
+	})
+
+	g.Go(func() error {
+		b := LPool.Get().([]byte)
+		defer LPool.Put(b)
+
+		_, err := io.CopyBuffer(rw2, rw1, b)
+		return err
+	})
+
+	err := g.Wait()
 	return err
 }
 
