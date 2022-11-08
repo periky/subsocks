@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/periky/subsocks/socks"
@@ -15,9 +16,15 @@ import (
 
 // Client holds contexts of the client
 type Client struct {
-	Config    *Config
-	TLSConfig *tls.Config
-	Proxys    []string
+	Config        *Config
+	TLSConfig     *tls.Config
+	DefaultProxys []string
+	Proxys        []string
+	httpsPool     sync.Pool
+	httpPool      sync.Pool
+	socksPool     sync.Pool
+	wsPool        sync.Pool
+	wssPool       sync.Pool
 }
 
 // NewClient creates a client
@@ -26,8 +33,22 @@ func NewClient(addr string) *Client {
 		Config: &Config{
 			Addr: addr,
 		},
-		Proxys: []string{"raw.githubusercontent.com"},
+		DefaultProxys: []string{"raw.githubusercontent.com"},
 	}
+}
+
+func (c *Client) NewHttpsSyncPool() error {
+	conn, err := net.Dial("tcp", c.Config.ServerAddr)
+	if err != nil {
+		return err
+	}
+	conn = c.wrapHTTPS(conn)
+	c.httpsPool = sync.Pool{
+		New: func() any {
+			return conn
+		},
+	}
+	return nil
 }
 
 // Serve starts the server
@@ -134,7 +155,7 @@ func (c *Client) AutoUpdateGFWList() {
 	if err != nil {
 		log.Printf("gen pac from gfwlist: %s", err)
 	}
-	c.Proxys = append(c.Proxys, urlProxy...)
+	c.Proxys = append(c.DefaultProxys, urlProxy...)
 
 	ticker := time.NewTicker(4 * time.Hour)
 	defer ticker.Stop()
